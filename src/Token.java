@@ -1,9 +1,9 @@
 public final class Token {
     public final TokenType tokenType;
-    public final String TokenString;
+    public final String tokenString;
 
-    public Token(TokenType tokenType, String TokenString) {
+    public Token(TokenType tokenType, String tokenString) {
         this.tokenType = tokenType;
-        this.TokenString = TokenString;
+        this.tokenString = tokenString;
     }
 }

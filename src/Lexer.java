@@ -43,22 +43,22 @@ public class Lexer {
 
     private static final int[][] NEXT_STATE_TABLE = createNextStateTable();
     private static final TokenType[] ACCEPTING_TOKEN_TYPE_FOR_STATE = createAcceptingTokenTypes();
-    private static final boolean[] IS_IMMEDIATE_FINAL_STATE = createImmediateFinalStates();
+    private static final boolean[] IS_IMMEDIATE_FINAL_STATE = setFinalStates();
 
     private static final Map<String, TokenType> RESERVED_WORDS_LOOKUP = createReservedWordsLookup();
 
     private final CharacterReader sourceReader;
 
     public Lexer(String sourceText) {
-        this.sourceReader = new CharacterReader(sourceText == null ? "" : sourceText);
+        this.sourceReader = new CharacterReader(sourceText);
     }
 
 
     public Token nextToken() {
-        StringBuilder currentStringBuilder = new StringBuilder();
+        String currentTokenString = "";
         int currentState = STATE_START;
         int lastAcceptingState = INVALID_STATE;
-        int lengthAtLastAcceptingState = 0;
+        int acceptedTokenLength = 0;
 
         while (true) {
             char currentCharacter = sourceReader.readNextCharacter();
@@ -72,53 +72,51 @@ public class Lexer {
                 }
 
                 if (lastAcceptingState != INVALID_STATE) {
-                    String Token_String = currentStringBuilder.substring(0, lengthAtLastAcceptingState);
+                    String TokenString = currentTokenString.substring(0, acceptedTokenLength);
                     TokenType tokenType = ACCEPTING_TOKEN_TYPE_FOR_STATE[lastAcceptingState];
-                    return createTokenWithKeywordCheck(tokenType, Token_String);
+                    return createTokenWithKeywordCheck(tokenType, TokenString);
                 }
 
                 if (currentCharacterClass == CharacterClass.END_OF_FILE) {
                     return new Token(TokenType.EOF, "");
                 }
 
-                currentStringBuilder.setLength(0);
+                currentTokenString = "";
                 currentState = STATE_START;
                 lastAcceptingState = INVALID_STATE;
-                lengthAtLastAcceptingState = 0;
+                acceptedTokenLength = 0;
                 continue;
             }
 
             currentState = nextState;
             if (currentState != STATE_START && currentCharacterClass != CharacterClass.END_OF_FILE) {
-                currentStringBuilder.append(currentCharacter);
+                currentTokenString += currentCharacter;
             }
 
             if (ACCEPTING_TOKEN_TYPE_FOR_STATE[currentState] != null) {
                 lastAcceptingState = currentState;
-                lengthAtLastAcceptingState = currentStringBuilder.length();
+                acceptedTokenLength = currentTokenString.length();
             }
 
             if (IS_IMMEDIATE_FINAL_STATE[currentState]) {
                 TokenType tokenType = ACCEPTING_TOKEN_TYPE_FOR_STATE[currentState];
-                String lexeme = currentStringBuilder.toString();
-                return createTokenWithKeywordCheck(tokenType, lexeme);
+                String TokenString = currentTokenString;
+                return createTokenWithKeywordCheck(tokenType, TokenString);
             }
         }
     }
 
-    // Converts identifiers to reserved-word tokens when applicable.
-    private Token createTokenWithKeywordCheck(TokenType tokenType, String lexeme) {
+    private Token createTokenWithKeywordCheck(TokenType tokenType, String tokenString) {
         if (tokenType == TokenType.IDENT) {
-            String lowercaseLexeme = lexeme.toLowerCase(Locale.ROOT);
-            TokenType keywordType = RESERVED_WORDS_LOOKUP.get(lowercaseLexeme);
+            String lowercaseTokenString = tokenString.toLowerCase(Locale.ROOT);
+            TokenType keywordType = RESERVED_WORDS_LOOKUP.get(lowercaseTokenString);
             if (keywordType != null) {
-                return new Token(keywordType, lexeme);
+                return new Token(keywordType, tokenString);
             }
         }
-        return new Token(tokenType, lexeme);
+        return new Token(tokenType, tokenString);
     }
 
-    // Maps a character to a table index for DFSA transitions.
     private static CharacterClass classifyCharacter(char character) {
         if (character == CharacterReader.END_OF_FILE_CHAR) {
             return CharacterClass.END_OF_FILE;
@@ -193,17 +191,12 @@ public class Lexer {
         setTransition(table, STATE_START, CharacterClass.END_OF_FILE, FINAL_STATE_EOF);
         setTransition(table, STATE_IDENTIFIER, CharacterClass.LETTER, STATE_IDENTIFIER);
         setTransition(table, STATE_IDENTIFIER, CharacterClass.DIGIT, STATE_IDENTIFIER);
-
         setTransition(table, STATE_NUMBER, CharacterClass.DIGIT, STATE_NUMBER);
-
         setTransition(table, STATE_COLON, CharacterClass.EQUALS, FINAL_STATE_ASSIGN);
-
         setTransition(table, STATE_EQUALS, CharacterClass.EQUALS, FINAL_STATE_EQUALS_EQUALS);
         setTransition(table, STATE_EXCLAMATION, CharacterClass.EQUALS, FINAL_STATE_NOT_EQUAL);
-
         setTransition(table, STATE_LESS_THAN, CharacterClass.EQUALS, FINAL_STATE_LESS_EQUAL);
         setTransition(table, STATE_LESS_THAN, CharacterClass.GREATER_THAN, FINAL_STATE_NOT_EQUAL);
-
         setTransition(table, STATE_GREATER_THAN, CharacterClass.EQUALS, FINAL_STATE_GREATER_EQUAL);
 
         return table;
@@ -241,7 +234,7 @@ public class Lexer {
         return types;
     }
 
-    private static boolean[] createImmediateFinalStates() {
+    private static boolean[] setFinalStates() {
         boolean[] states = new boolean[STATE_COUNT];
 
         states[FINAL_STATE_PLUS] = true;
@@ -280,27 +273,21 @@ public class Lexer {
         return lookup;
     }
 
-    private static String readSourceText(String fileName) {
-        try {
-            return Files.readString(Path.of(fileName));
-        } catch (IOException exception) {
-            throw new RuntimeException("Failed to read " + fileName + ".", exception);
-        }
+    private static String readSourceProgram(String fileName) throws IOException {
+        return Files.readString(Path.of(fileName));
     }
 
-    public static void main(String[] args) {
-        String sourceText = readSourceText("Program_Text.txt");
+    public static void main(String[] args) throws IOException {
+        String sourceText = readSourceProgram("Program_Text.txt");
         Lexer lexer = new Lexer(sourceText);
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("tokens.txt")))) {
             while (true) {
                 Token token = lexer.nextToken();
-                writer.println(token.tokenType + "," + token.TokenString);
+                writer.println(token.tokenType + "," + token.tokenString);
                 if (token.tokenType == TokenType.EOF) {
                     break;
                 }
             }
-        } catch (IOException exception) {
-            throw new RuntimeException("Failed to write tokens to file.", exception);
         }
     }
 }
