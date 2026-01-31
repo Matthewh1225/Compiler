@@ -1,0 +1,21 @@
+enum CharacterClass {
+    LETTER,
+    DIGIT,
+    WHITESPACE,
+    PLUS,
+    MINUS,
+    STAR,
+    SLASH,
+    COLON,
+    EQUALS,
+    EXCLAMATION,
+    LESS_THAN,
+    GREATER_THAN,
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    COMMA,
+    SEMICOLON,
+    DOT,
+    END_OF_FILE,
+    OTHER
+}

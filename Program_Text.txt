@@ -1,0 +1,12 @@
+const one = 1;
+var y, z;
+procedure cat;
+begin
+    y := 0;
+    z := 10;
+    while z != y do
+        begin
+            y := y + one;
+            z := z - one;
+        end;
+end.
