@@ -21,7 +21,6 @@ public class Lexer {
     private static final int STATE_GREATER_THAN = 5;
     private static final int STATE_EQUALS = 6;
     private static final int STATE_EXCLAMATION = 23;
-
     private static final int FINAL_STATE_PLUS = 7;
     private static final int FINAL_STATE_MINUS = 8;
     private static final int FINAL_STATE_STAR = 9;
@@ -38,7 +37,6 @@ public class Lexer {
     private static final int FINAL_STATE_NOT_EQUAL = 20;
     private static final int FINAL_STATE_GREATER_EQUAL = 21;
     private static final int FINAL_STATE_EOF = 22;
-
     private static final int STATE_COUNT = 24;
 
     private static final int[][] NEXT_STATE_TABLE = createNextStateTable();
