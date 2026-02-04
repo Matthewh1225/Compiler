@@ -3,11 +3,6 @@ IDENT|one
 EQUALS|=
 NUMBER|1
 SEMICOLON|;
-CONST|const
-IDENT|fuck
-EQUALS|=
-IDENT|fuck
-SEMICOLON|;
 VAR|var
 IDENT|y
 COMMA|,
@@ -47,4 +42,9 @@ END|end
 SEMICOLON|;
 END|end
 DOT|.
+CONST|Const
+IDENT|doggo
+EQUALS|=
+IDENT|dog
+SEMICOLON|;
 EOF|

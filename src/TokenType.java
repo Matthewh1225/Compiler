@@ -1,7 +1,6 @@
 public enum TokenType {
     IDENT,
     NUMBER,
-
     CONST,
     VAR,
     PROCEDURE,
@@ -13,7 +12,6 @@ public enum TokenType {
     WHILE,
     DO,
     ODD,
-
     PLUS,
     MINUS,
     STAR,
@@ -23,7 +21,6 @@ public enum TokenType {
     COMMA,
     SEMICOLON,
     DOT,
-
     ASSIGN,
     EQUALS,
     EQUALS_EQUALS,
@@ -32,6 +29,5 @@ public enum TokenType {
     NOT_EQUAL,
     GREATER_THAN,
     GREATER_EQUAL,
-
     EOF
 }

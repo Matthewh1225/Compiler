@@ -10,3 +10,4 @@ begin
             z := z - one;
         end;
 end.
+Const doggo = "dog";

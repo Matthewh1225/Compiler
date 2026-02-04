@@ -1,6 +1,5 @@
 final class CharacterReader {
     static final char END_OF_FILE_CHAR = '\0';
-
     private final String ProgramText;
     private int currentIndex;
 
@@ -8,7 +7,6 @@ final class CharacterReader {
         this.ProgramText = ProgramText;
         this.currentIndex = 0;
     }
-
     char readNextCharacter() {
         if (currentIndex >= ProgramText.length()) {
             return END_OF_FILE_CHAR;
@@ -17,7 +15,6 @@ final class CharacterReader {
         currentIndex++;
         return character;
     }
-
     void retractOneCharacter(char lastCharacterRead) {
         if (lastCharacterRead == END_OF_FILE_CHAR) {
             return;

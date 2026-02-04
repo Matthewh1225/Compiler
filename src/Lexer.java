@@ -1,14 +1,13 @@
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
+// Lexical analyzer for Java0 programming language.
+// Uses a table-driven deterministic finite automaton to recognize tokens.
 public class Lexer {
     private static final int INVALID_STATE = -1;
     private static final int STATE_START = 0;
@@ -18,29 +17,28 @@ public class Lexer {
     private static final int STATE_LESS_THAN = 4;
     private static final int STATE_GREATER_THAN = 5;
     private static final int STATE_EQUALS = 6;
-    private static final int FINAL_STATE_PLUS = 7;
-    private static final int FINAL_STATE_MINUS = 8;
-    private static final int FINAL_STATE_STAR = 9;
-    private static final int FINAL_STATE_SLASH = 10;
-    private static final int FINAL_STATE_LEFT_PAREN = 11;
-    private static final int FINAL_STATE_RIGHT_PAREN = 12;
-    private static final int FINAL_STATE_COMMA = 13;
-    private static final int FINAL_STATE_SEMICOLON = 14;
-    private static final int FINAL_STATE_DOT = 15;
-    private static final int FINAL_STATE_ASSIGN = 16;
-    private static final int FINAL_STATE_EQUAL = 17;
+    private static final int STATE_EXCLAMATION = 7;
+    private static final int FINAL_STATE_PLUS = 8;
+    private static final int FINAL_STATE_MINUS = 9;
+    private static final int FINAL_STATE_STAR = 10;
+    private static final int FINAL_STATE_SLASH = 11;
+    private static final int FINAL_STATE_LEFT_PAREN = 12;
+    private static final int FINAL_STATE_RIGHT_PAREN = 13;
+    private static final int FINAL_STATE_COMMA = 14;
+    private static final int FINAL_STATE_SEMICOLON = 15;
+    private static final int FINAL_STATE_DOT = 16;
+    private static final int FINAL_STATE_ASSIGN = 17;
     private static final int FINAL_STATE_EQUALS_EQUALS = 18;
     private static final int FINAL_STATE_LESS_EQUAL = 19;
     private static final int FINAL_STATE_NOT_EQUAL = 20;
     private static final int FINAL_STATE_GREATER_EQUAL = 21;
     private static final int FINAL_STATE_EOF = 22;
-    private static final int STATE_EXCLAMATION = 23;
-    private static final int STATE_COUNT = 24;
-    private static final int[][] NEXT_STATE_TABLE = createNextStateTable();
-    private static final TokenType[] ACCEPTING_TOKEN_TYPE_FOR_STATE = createAcceptingTokenTypes();
-    private static final boolean[] IS_IMMEDIATE_FINAL_STATE = setFinalStates();
+    private static final int STATE_COUNT = 23;
+    //initialize the state transition table and token type mapping
+    private static final int[][] NEXT_STATE_TABLE = buildTable();
+    private static final TokenType[] TOKEN_TYPES = setupTokenTypes();
 
-    private static final Map<String, TokenType> RESERVED_WORDS_LOOKUP = createReservedWordsLookup();
+    private static final Map<String, TokenType> KEYWORDS = setupKeywords();
 
     private final CharacterReader sourceReader;
 
@@ -48,85 +46,85 @@ public class Lexer {
         this.sourceReader = new CharacterReader(sourceText);
     }
 
-
+    // Returns the next token
+    // LL(1), keeps reading characters as long as they are a valid token.
+    // When no valid transition exists, returns the longest valid token found.
     public Token nextToken() {
-        String currentTokenString = "";
-        int currentState = STATE_START;
-        int lastAcceptingState = INVALID_STATE;
-        int acceptedTokenLength = 0;
+        StringBuilder lexeme = new StringBuilder();
+        int state = STATE_START;
+        int lastAccepting = INVALID_STATE;
+        int acceptedLen = 0;
 
         while (true) {
-            char currentCharacter = sourceReader.readNextCharacter();
-            CharacterClass currentCharacterClass = classifyCharacter(currentCharacter);
+            char ch = sourceReader.readNextCharacter();
+            CharacterClass charClass = classifyCharacter(ch);
 
-            int nextState = NEXT_STATE_TABLE[currentState][currentCharacterClass.ordinal()];
+            int nextState = NEXT_STATE_TABLE[state][charClass.ordinal()];
 
             if (nextState == INVALID_STATE) {
-                if (currentCharacterClass != CharacterClass.END_OF_FILE && !(currentState == STATE_START && lastAcceptingState == INVALID_STATE)) {
-                    sourceReader.retractOneCharacter(currentCharacter);
+                // Check if we need to put the char back
+                // Dont retract if its EOF or if we had an error at the begining
+                boolean errorAtStart = (state == STATE_START && lastAccepting == INVALID_STATE);
+                if (charClass != CharacterClass.END_OF_FILE && !errorAtStart) {
+                    sourceReader.retractOneCharacter(ch);
                 }
 
-                if (lastAcceptingState != INVALID_STATE) {
-                    String TokenString = currentTokenString.substring(0, acceptedTokenLength);
-                    TokenType tokenType = ACCEPTING_TOKEN_TYPE_FOR_STATE[lastAcceptingState];
-                    return createTokenWithKeywordCheck(tokenType, TokenString);
+                if (lastAccepting != INVALID_STATE) {
+                    String tokenString = lexeme.substring(0, acceptedLen);
+                    TokenType tokenType = TOKEN_TYPES[lastAccepting];
+                    return checkKeyword(tokenType, tokenString);
                 }
 
-                if (currentCharacterClass == CharacterClass.END_OF_FILE) {
+                if (charClass == CharacterClass.END_OF_FILE) {
                     return new Token(TokenType.EOF, "");
                 }
 
-                currentTokenString = "";
-                currentState = STATE_START;
-                lastAcceptingState = INVALID_STATE;
-                acceptedTokenLength = 0;
+                lexeme.setLength(0);
+                state = STATE_START;
+                lastAccepting = INVALID_STATE;
+                acceptedLen = 0;
                 continue;
             }
-
-            currentState = nextState;
-            if (currentState != STATE_START && currentCharacterClass != CharacterClass.END_OF_FILE) {
-                currentTokenString += currentCharacter;
+            state = nextState;
+            if (state != STATE_START&& charClass != CharacterClass.END_OF_FILE) {
+                lexeme.append(ch);
             }
 
-            if (ACCEPTING_TOKEN_TYPE_FOR_STATE[currentState] != null) {
-                lastAcceptingState = currentState;
-                acceptedTokenLength = currentTokenString.length();
-            }
-
-            if (IS_IMMEDIATE_FINAL_STATE[currentState]) {
-                TokenType tokenType = ACCEPTING_TOKEN_TYPE_FOR_STATE[currentState];
-                String TokenString = currentTokenString;
-                return createTokenWithKeywordCheck(tokenType, TokenString);
+            if (TOKEN_TYPES[state]!= null) {
+                lastAccepting = state;
+                acceptedLen = lexeme.length();
             }
         }
     }
 
-    private Token createTokenWithKeywordCheck(TokenType tokenType, String tokenString) {
-        if (tokenType == TokenType.IDENT) {
-            String lowercaseTokenString = tokenString.toLowerCase(Locale.ROOT);
-            TokenType keywordType = RESERVED_WORDS_LOOKUP.get(lowercaseTokenString);
-            if (keywordType != null) {
-                return new Token(keywordType, tokenString);
+    //Check if an tokern a reserved keyword
+    private Token checkKeyword(TokenType type, String text) {
+        if (type == TokenType.IDENT) {
+            String lower =text.toLowerCase();
+            TokenType keyword = KEYWORDS.get(lower);
+            if (keyword != null) {
+                return new Token(keyword, text);
             }
         }
-        return new Token(tokenType, tokenString);
+        return new Token(type, text);
     }
 
-    private static CharacterClass classifyCharacter(char character) {
-        if (character == CharacterReader.END_OF_FILE_CHAR) {
+    // clasify each character 
+    private static CharacterClass classifyCharacter(char ch) {
+        if (ch == CharacterReader.END_OF_FILE_CHAR) {
             return CharacterClass.END_OF_FILE;
         }
-        if ((character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z')) {
+        if ((ch >= 'a'&& ch <='z') || (ch >='A' && ch <= 'Z')) {
             return CharacterClass.LETTER;
         }
-        if (character >= '0' && character <= '9') {
+        if (ch >= '0' &&ch <='9') {
             return CharacterClass.DIGIT;
         }
-        if (character == ' ' || character == '\t' || character == '\n' || character == '\r') {
+        if (ch == ' ' ||ch == '\t'|| ch == '\n' || ch == '\r') {
             return CharacterClass.WHITESPACE;
         }
 
-        switch (character) {
+        switch (ch) {
             case '+':
                 return CharacterClass.PLUS;
             case '-':
@@ -160,130 +158,110 @@ public class Lexer {
         }
     }
 
-    private static int[][] createNextStateTable() {
+    // Build the transition table for the finite state machine
+    private static int[][] buildTable() {
         int[][] table = new int[STATE_COUNT][CharacterClass.values().length];
-        for (int state = 0; state < STATE_COUNT; state++) {
+        for (int state = 0;state < STATE_COUNT;state++) 
+         {
             Arrays.fill(table[state], INVALID_STATE);
         }
 
-        setTransition(table, STATE_START, CharacterClass.WHITESPACE, STATE_START);
-        setTransition(table, STATE_START, CharacterClass.LETTER, STATE_IDENTIFIER);
-        setTransition(table, STATE_START, CharacterClass.DIGIT, STATE_NUMBER);
-        setTransition(table, STATE_START, CharacterClass.PLUS, FINAL_STATE_PLUS);
-        setTransition(table, STATE_START, CharacterClass.MINUS, FINAL_STATE_MINUS);
-        setTransition(table, STATE_START, CharacterClass.STAR, FINAL_STATE_STAR);
-        setTransition(table, STATE_START, CharacterClass.SLASH, FINAL_STATE_SLASH);
-        setTransition(table, STATE_START, CharacterClass.LEFT_PAREN, FINAL_STATE_LEFT_PAREN);
-        setTransition(table, STATE_START, CharacterClass.RIGHT_PAREN, FINAL_STATE_RIGHT_PAREN);
-        setTransition(table, STATE_START, CharacterClass.COMMA, FINAL_STATE_COMMA);
-        setTransition(table, STATE_START, CharacterClass.SEMICOLON, FINAL_STATE_SEMICOLON);
-        setTransition(table, STATE_START, CharacterClass.DOT, FINAL_STATE_DOT);
-        setTransition(table, STATE_START, CharacterClass.COLON, STATE_COLON);
-        setTransition(table, STATE_START, CharacterClass.EQUALS, STATE_EQUALS);
-        setTransition(table, STATE_START, CharacterClass.EXCLAMATION, STATE_EXCLAMATION);
-        setTransition(table, STATE_START, CharacterClass.LESS_THAN, STATE_LESS_THAN);
-        setTransition(table, STATE_START, CharacterClass.GREATER_THAN, STATE_GREATER_THAN);
-        setTransition(table, STATE_START, CharacterClass.END_OF_FILE, FINAL_STATE_EOF);
-        setTransition(table, STATE_IDENTIFIER, CharacterClass.LETTER, STATE_IDENTIFIER);
-        setTransition(table, STATE_IDENTIFIER, CharacterClass.DIGIT, STATE_IDENTIFIER);
-        setTransition(table, STATE_NUMBER, CharacterClass.DIGIT, STATE_NUMBER);
-        setTransition(table, STATE_COLON, CharacterClass.EQUALS, FINAL_STATE_ASSIGN);
-        setTransition(table, STATE_EQUALS, CharacterClass.EQUALS, FINAL_STATE_EQUALS_EQUALS);
-        setTransition(table, STATE_EXCLAMATION, CharacterClass.EQUALS, FINAL_STATE_NOT_EQUAL);
-        setTransition(table, STATE_LESS_THAN, CharacterClass.EQUALS, FINAL_STATE_LESS_EQUAL);
-        setTransition(table, STATE_LESS_THAN, CharacterClass.GREATER_THAN, FINAL_STATE_NOT_EQUAL);
-        setTransition(table, STATE_GREATER_THAN, CharacterClass.EQUALS, FINAL_STATE_GREATER_EQUAL);
+        // Define all valid state transitions
+        table[STATE_START][CharacterClass.WHITESPACE.ordinal()]= STATE_START;
+        table[STATE_START][CharacterClass.LETTER.ordinal()] = STATE_IDENTIFIER;
+        table[STATE_START][CharacterClass.DIGIT.ordinal()]= STATE_NUMBER;
+        table[STATE_START][CharacterClass.PLUS.ordinal()] =FINAL_STATE_PLUS;
+        table[STATE_START][CharacterClass.MINUS.ordinal()] = FINAL_STATE_MINUS;
+        table[STATE_START][CharacterClass.STAR.ordinal()]= FINAL_STATE_STAR;
+        table[STATE_START][CharacterClass.SLASH.ordinal()] = FINAL_STATE_SLASH;
+        table[STATE_START][CharacterClass.LEFT_PAREN.ordinal()] = FINAL_STATE_LEFT_PAREN;
+        table[STATE_START][CharacterClass.RIGHT_PAREN.ordinal()] = FINAL_STATE_RIGHT_PAREN;
+        table[STATE_START][CharacterClass.COMMA.ordinal()]= FINAL_STATE_COMMA;
+        table[STATE_START][CharacterClass.SEMICOLON.ordinal()] = FINAL_STATE_SEMICOLON;
+        table[STATE_START][CharacterClass.DOT.ordinal()] = FINAL_STATE_DOT;
+        table[STATE_START][CharacterClass.COLON.ordinal()] = STATE_COLON;
+        table[STATE_START][CharacterClass.EQUALS.ordinal()] =STATE_EQUALS;
+        table[STATE_START][CharacterClass.EXCLAMATION.ordinal()] = STATE_EXCLAMATION;
+        table[STATE_START][CharacterClass.LESS_THAN.ordinal()] =STATE_LESS_THAN;
+        table[STATE_START][CharacterClass.GREATER_THAN.ordinal()] = STATE_GREATER_THAN;
+        table[STATE_START][CharacterClass.END_OF_FILE.ordinal()] =FINAL_STATE_EOF;
+        table[STATE_IDENTIFIER][CharacterClass.LETTER.ordinal()] = STATE_IDENTIFIER;
+        table[STATE_IDENTIFIER][CharacterClass.DIGIT.ordinal()] =STATE_IDENTIFIER;
+        table[STATE_NUMBER][CharacterClass.DIGIT.ordinal()] = STATE_NUMBER;
+        table[STATE_COLON][CharacterClass.EQUALS.ordinal()]=FINAL_STATE_ASSIGN;
+        table[STATE_EQUALS][CharacterClass.EQUALS.ordinal()] = FINAL_STATE_EQUALS_EQUALS;
+        table[STATE_EXCLAMATION][CharacterClass.EQUALS.ordinal()] =FINAL_STATE_NOT_EQUAL;
+        table[STATE_LESS_THAN][CharacterClass.EQUALS.ordinal()] = FINAL_STATE_LESS_EQUAL;
+        table[STATE_LESS_THAN][CharacterClass.GREATER_THAN.ordinal()] =FINAL_STATE_NOT_EQUAL;
+        table[STATE_GREATER_THAN][CharacterClass.EQUALS.ordinal()] = FINAL_STATE_GREATER_EQUAL;
 
         return table;
     }
 
-    private static void setTransition(int[][] table, int fromState, CharacterClass characterClass, int toState) {
-        table[fromState][characterClass.ordinal()] = toState;
-    }
-
-    private static TokenType[] createAcceptingTokenTypes() {
+    // Map each state to token type
+    private static TokenType[] setupTokenTypes() 
+    {
         TokenType[] types = new TokenType[STATE_COUNT];
 
-        types[STATE_IDENTIFIER] = TokenType.IDENT;
+        types[STATE_IDENTIFIER] =TokenType.IDENT;
         types[STATE_NUMBER] = TokenType.NUMBER;
-        types[STATE_EQUALS] = TokenType.EQUALS;
-        types[STATE_LESS_THAN] = TokenType.LESS_THAN;
+        types[STATE_EQUALS]= TokenType.EQUALS;
+        types[STATE_LESS_THAN] =TokenType.LESS_THAN;
         types[STATE_GREATER_THAN] = TokenType.GREATER_THAN;
-        types[FINAL_STATE_PLUS] = TokenType.PLUS;
-        types[FINAL_STATE_MINUS] = TokenType.MINUS;
-        types[FINAL_STATE_STAR] = TokenType.STAR;
-        types[FINAL_STATE_SLASH] = TokenType.SLASH;
+        types[FINAL_STATE_PLUS]= TokenType.PLUS;
+        types[FINAL_STATE_MINUS] =TokenType.MINUS;
+        types[FINAL_STATE_STAR]= TokenType.STAR;
+        types[FINAL_STATE_SLASH]= TokenType.SLASH;
         types[FINAL_STATE_LEFT_PAREN] = TokenType.LEFT_PAREN;
         types[FINAL_STATE_RIGHT_PAREN] = TokenType.RIGHT_PAREN;
-        types[FINAL_STATE_COMMA] = TokenType.COMMA;
+        types[FINAL_STATE_COMMA] =TokenType.COMMA;
         types[FINAL_STATE_SEMICOLON] = TokenType.SEMICOLON;
         types[FINAL_STATE_DOT] = TokenType.DOT;
-        types[FINAL_STATE_ASSIGN] = TokenType.ASSIGN;
-        types[FINAL_STATE_EQUAL] = TokenType.EQUALS;
+        types[FINAL_STATE_ASSIGN] =TokenType.ASSIGN;
         types[FINAL_STATE_EQUALS_EQUALS] = TokenType.EQUALS_EQUALS;
-        types[FINAL_STATE_LESS_EQUAL] = TokenType.LESS_EQUAL;
-        types[FINAL_STATE_NOT_EQUAL] = TokenType.NOT_EQUAL;
-        types[FINAL_STATE_GREATER_EQUAL] = TokenType.GREATER_EQUAL;
+        types[FINAL_STATE_LESS_EQUAL]=TokenType.LESS_EQUAL;
+        types[FINAL_STATE_NOT_EQUAL]= TokenType.NOT_EQUAL;
+        types[FINAL_STATE_GREATER_EQUAL]= TokenType.GREATER_EQUAL;
         types[FINAL_STATE_EOF] = TokenType.EOF;
 
         return types;
     }
 
-    private static boolean[] setFinalStates() {
-        boolean[] states = new boolean[STATE_COUNT];
-
-        states[FINAL_STATE_PLUS] = true;
-        states[FINAL_STATE_MINUS] = true;
-        states[FINAL_STATE_STAR] = true;
-        states[FINAL_STATE_SLASH] = true;
-        states[FINAL_STATE_LEFT_PAREN] = true;
-        states[FINAL_STATE_RIGHT_PAREN] = true;
-        states[FINAL_STATE_COMMA] = true;
-        states[FINAL_STATE_SEMICOLON] = true;
-        states[FINAL_STATE_DOT] = true;
-        states[FINAL_STATE_ASSIGN] = true;
-        states[FINAL_STATE_EQUAL] = true;
-        states[FINAL_STATE_EQUALS_EQUALS] = true;
-        states[FINAL_STATE_LESS_EQUAL] = true;
-        states[FINAL_STATE_NOT_EQUAL] = true;
-        states[FINAL_STATE_GREATER_EQUAL] = true;
-        states[FINAL_STATE_EOF] = true;
-
-        return states;
+    // Map reserved words to their token types
+    private static Map<String, TokenType> setupKeywords() 
+    {
+        Map<String, TokenType> keywords = new HashMap<>();
+        keywords.put("const", TokenType.CONST);
+        keywords.put("var",TokenType.VAR);
+        keywords.put("procedure", TokenType.PROCEDURE);
+        keywords.put("call",TokenType.CALL);
+        keywords.put("begin",TokenType.BEGIN);
+        keywords.put("end", TokenType.END);
+        keywords.put("if",TokenType.IF);
+        keywords.put("then", TokenType.THEN);
+        keywords.put("while", TokenType.WHILE);
+        keywords.put("do", TokenType.DO);
+        keywords.put("odd", TokenType.ODD);
+        return keywords;
     }
 
-    private static Map<String, TokenType> createReservedWordsLookup() {
-        Map<String, TokenType> lookup = new HashMap<>();
-        lookup.put("const", TokenType.CONST);
-        lookup.put("var", TokenType.VAR);
-        lookup.put("procedure", TokenType.PROCEDURE);
-        lookup.put("call", TokenType.CALL);
-        lookup.put("begin", TokenType.BEGIN);
-        lookup.put("end", TokenType.END);
-        lookup.put("if", TokenType.IF);
-        lookup.put("then", TokenType.THEN);
-        lookup.put("while", TokenType.WHILE);
-        lookup.put("do", TokenType.DO);
-        lookup.put("odd", TokenType.ODD);
-        return lookup;
-    }
-
-    private static String readSourceProgram(String fileName) throws IOException {
-        return Files.readString(Path.of(fileName));
+    private static String loadFile(String file) throws IOException {
+        return Files.readString(Path.of(file));
     }
 
     public static void main(String[] args) throws IOException {
-        String sourceText = readSourceProgram("Program_Text.txt");
-        Lexer lexer = new Lexer(sourceText);
-        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("tokens.txt")))) {
-            while (true) {
-                Token token = lexer.nextToken();
-                writer.println(token.tokenType + "|" + token.tokenString);
-                if (token.tokenType == TokenType.EOF) {
-                    System.out.println("Complete, Tokens written to tokens.txt");
-                    break;
-                }
+        String programString =loadFile("Program_Text.txt");
+        Lexer lexer = new Lexer(programString);
+        FileWriter writer = new FileWriter("tokens.txt");
+        while (true)
+            {
+            Token token = lexer.nextToken();
+            writer.write(token.tokenType +"|"+ token.tokenString + "\n");
+            if (token.tokenType ==TokenType.EOF) {
+                System.out.println("Completed,Tokens written to tokens.txt");
+                break;
             }
         }
+        writer.close();
     }
 }
