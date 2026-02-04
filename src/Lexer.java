@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-// Table-driven DFSA lexer for a simple teaching language.
 public class Lexer {
     private static final int INVALID_STATE = -1;
     private static final int STATE_START = 0;

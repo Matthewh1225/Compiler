@@ -3,7 +3,7 @@ IDENT|one
 EQUALS|=
 NUMBER|1
 SEMICOLON|;
-IDENT|conts
+CONST|const
 IDENT|fuck
 EQUALS|=
 IDENT|fuck

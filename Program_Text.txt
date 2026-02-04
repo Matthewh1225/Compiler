@@ -1,5 +1,5 @@
 const one = 1;
-conts fuck = "fuck";
+const fuck = "fuck";
 var y, z;
 procedure cat;
 begin
