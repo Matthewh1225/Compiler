@@ -1,50 +1,232 @@
-CONST|const
-IDENT|one
-EQUALS|=
-NUMBER|1
-SEMICOLON|;
-VAR|var
-IDENT|y
-COMMA|,
-IDENT|z
-SEMICOLON|;
-PROCEDURE|procedure
-IDENT|cat
-SEMICOLON|;
-BEGIN|begin
-IDENT|y
-ASSIGN|:=
-NUMBER|0
-SEMICOLON|;
-IDENT|z
-ASSIGN|:=
-NUMBER|10
-SEMICOLON|;
-WHILE|while
-IDENT|z
-NOT_EQUAL|!=
-IDENT|y
-DO|do
-BEGIN|begin
-IDENT|y
-ASSIGN|:=
-IDENT|y
-PLUS|+
-IDENT|one
-SEMICOLON|;
-IDENT|z
-ASSIGN|:=
-IDENT|z
-MINUS|-
-IDENT|one
-SEMICOLON|;
-END|end
-SEMICOLON|;
-END|end
-DOT|.
-CONST|Const
-IDENT|doggo
-EQUALS|=
-IDENT|dog
-SEMICOLON|;
-EOF|
+Token                    Classification
+----------------------------------------------------
+CLASS                    $class
+LargestCommonDenominator $program name
+{                        $LB
+CONST                    $Const
+M                        Constvar
+=                        $=
+7                        Numeric literal
+,                        $comma
+N                        Constvar
+=                        $=
+85                       Numeric literal
+;                        $semi
+VAR                      $VARDeclaration
+X                        Var
+,                        $comma
+Y                        Var
+,                        $comma
+Z                        Var
+,                        $comma
+Q                        Var
+,                        $comma
+R                        Var
+;                        $semi
+PROCEDURE                $procedure
+Multiply                 Procedure
+(                        $LP
+)                        $RP
+{                        $LB
+VAR                      $VARDeclaration
+A                        Var
+,                        $comma
+B                        Var
+;                        $semi
+A                        Var
+=                        $=
+X                        Var
+;                        $semi
+B                        Var
+=                        $=
+Y                        Var
+;                        $semi
+Z                        Var
+=                        $=
+0                        Numeric literal
+;                        $semi
+WHILE                    $while
+B                        Var
+>                        $relop
+0                        Numeric literal
+DO                       $do
+{                        $LB
+IF                       $if
+ODD                      $odd
+B                        Var
+THEN                     $then
+Z                        Var
+=                        $=
+Z                        Var
++                        $addop
+A                        Var
+;                        $semi
+A                        Var
+=                        $=
+2                        Numeric literal
+*                        $mop
+A                        Var
+;                        $semi
+B                        Var
+=                        $=
+B                        Var
+/                        $mop
+2                        Numeric literal
+}                        $RB
+}                        $RB
+PROCEDURE                $procedure
+Divide                   Procedure
+(                        $LP
+)                        $RP
+{                        $LB
+VAR                      $VARDeclaration
+W                        Var
+;                        $semi
+R                        Var
+=                        $=
+X                        Var
+;                        $semi
+Q                        Var
+=                        $=
+0                        Numeric literal
+;                        $semi
+W                        Var
+=                        $=
+Y                        Var
+;                        $semi
+WHILE                    $while
+W                        Var
+<=                       $relop
+R                        Var
+DO                       $do
+W                        Var
+=                        $=
+2                        Numeric literal
+*                        $mop
+W                        Var
+;                        $semi
+WHILE                    $while
+W                        Var
+>                        $relop
+Y                        Var
+DO                       $do
+{                        $LB
+Q                        Var
+=                        $=
+2                        Numeric literal
+*                        $mop
+Q                        Var
+;                        $semi
+W                        Var
+=                        $=
+W                        Var
+/                        $mop
+2                        Numeric literal
+;                        $semi
+IF                       $if
+W                        Var
+<=                       $relop
+R                        Var
+THEN                     $then
+{                        $LB
+R                        Var
+=                        $=
+R                        Var
+W                        Var
+;                        $semi
+Q                        Var
+=                        $=
+Q                        Var
++                        $addop
+1                        Numeric literal
+}                        $RB
+}                        $RB
+}                        $RB
+PROCEDURE                $procedure
+GCD                      Procedure
+(                        $LP
+)                        $RP
+{                        $LB
+VAR                      $VARDeclaration
+F                        Var
+,                        $comma
+G                        Var
+;                        $semi
+F                        Var
+=                        $=
+X                        Var
+;                        $semi
+G                        Var
+=                        $=
+Y                        Var
+;                        $semi
+WHILE                    $while
+F                        Var
+!=                       $relop
+G                        Var
+DO                       $do
+{                        $LB
+IF                       $if
+F                        Var
+<                        $relop
+G                        Var
+THEN                     $then
+G                        Var
+=                        $=
+G                        Var
+F                        Var
+;                        $semi
+IF                       $if
+G                        Var
+<                        $relop
+F                        Var
+THEN                     $then
+F                        Var
+=                        $=
+F                        Var
+G                        Var
+;                        $semi
+}                        $RB
+Z                        Var
+=                        $=
+F                        Var
+}                        $RB
+X                        Var
+=                        $=
+M                        Var
+;                        $semi
+Y                        Var
+=                        $=
+N                        Var
+CALL                     $call
+Multiply                 Procedure
+(                        $LP
+)                        $RP
+;                        $semi
+X                        Var
+=                        $=
+25                       Numeric literal
+;                        $semi
+Y                        Var
+=                        $=
+3                        Numeric literal
+;                        $semi
+CALL                     $call
+Divide                   Procedure
+(                        $LP
+)                        $RP
+;                        $semi
+X                        Var
+=                        $=
+84                       Numeric literal
+;                        $semi
+Y                        Var
+=                        $=
+36                       Numeric literal
+;                        $semi
+CALL                     $call
+GCD                      Procedure
+(                        $LP
+)                        $RP
+}                        $RB
+EOF                      $eof

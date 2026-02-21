@@ -1,0 +1,28 @@
+Symbol Table:
+Symbol                   Classification     Value      Address  Segment
+---------------------------------------------------------------------------
+LargestCommonDenominator $program name                 0        CS     
+M                        Constvar           7          0        DS     
+N                        Constvar           85         2        DS     
+X                        Var                ?          4        DS     
+Y                        Var                ?          6        DS     
+Z                        Var                ?          8        DS     
+Q                        Var                ?          10       DS     
+R                        Var                ?          12       DS     
+Multiply                 Procedure          ?          2        CS     
+A                        Var                ?          14       DS     
+B                        Var                ?          16       DS     
+0                        Numeric literal    0          18       DS     
+2                        Numeric literal    2          20       DS     
+Divide                   Procedure          ?          4        CS     
+W                        Var                ?          22       DS     
+1                        Numeric literal    1          24       DS     
+GCD                      Procedure          ?          6        CS     
+F                        Var                ?          26       DS     
+G                        Var                ?          28       DS     
+25                       Numeric literal    25         30       DS     
+3                        Numeric literal    3          32       DS     
+84                       Numeric literal    84         34       DS     
+36                       Numeric literal    36         36       DS     
+Temp1                    Var                ?          38       DS     
+---------------------------------------------------------------------------

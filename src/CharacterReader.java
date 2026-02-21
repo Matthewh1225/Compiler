@@ -1,26 +1,22 @@
-final class CharacterReader {
-    static final char END_OF_FILE_CHAR = '\0';
-    private final String ProgramText;
-    private int currentIndex;
+//CharacterReader.java
+class CharacterReader {
+    String sourceText;
+    int position;
 
-    CharacterReader(String ProgramText) {
-        this.ProgramText = ProgramText;
-        this.currentIndex = 0;
+    CharacterReader(String sourceText) {
+        this.sourceText = sourceText;
+        this.position = 0;
     }
+
+    boolean eof() {
+        return position >= sourceText.length();
+    }
+    //returns the next character and advances
     char readNextCharacter() {
-        if (currentIndex >= ProgramText.length()) {
-            return END_OF_FILE_CHAR;
-        }
-        char character = ProgramText.charAt(currentIndex);
-        currentIndex++;
-        return character;
+        return sourceText.charAt(position++);
     }
-    void retractOneCharacter(char lastCharacterRead) {
-        if (lastCharacterRead == END_OF_FILE_CHAR) {
-            return;
-        }
-        if (currentIndex > 0) {
-            currentIndex--;
-        }
+    //back one character
+    void moveBackOneChar() {
+        position--;
     }
 }
